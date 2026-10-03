@@ -646,7 +646,9 @@ fn run_add_mode(arg: Option<&String>) {
     {
         Some(host) => {
             if let Err(e) = capture_original_override() {
-                log(&format!("capture state before add failed: {e}"));
+                let msg = format!("无法保存原始 ProxyOverride，已取消修改: {e}");
+                log(&format!("add mode: {msg}"));
+                return;
             }
 
             match add_bypass(&host) {
@@ -701,9 +703,11 @@ fn main() {
     ensure_config();
     if let Err(e) = capture_original_override() {
         log(&format!("initial state capture failed: {e}"));
+        return;
     }
     if let Err(e) = apply_override() {
         log(&format!("initial ProxyOverride apply failed: {e}"));
+        return;
     }
 
     log_proxy_expectation();
@@ -711,6 +715,11 @@ fn main() {
     watch_config();
     log("started");
     run_gui();
+
+    STOPPING.store(true, Ordering::SeqCst);
+    if let Err(e) = restore_original_override(true) {
+        log(&format!("restore after GUI exit failed: {e}"));
+    }
 }
 
 #[cfg(test)]
