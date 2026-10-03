@@ -452,7 +452,9 @@ fn balloon(msg: &str) {
         set_str16(&mut nid.szInfoTitle, "ProxyKeeper");
         nid.dwInfoFlags = NIIF_INFO;
         unsafe {
-            Shell_NotifyIconW(NIM_MODIFY, &nid);
+            if !Shell_NotifyIconW(NIM_MODIFY, &nid).as_bool() {
+                log("failed to update tray notification");
+            }
         }
     }
 }
@@ -533,7 +535,9 @@ unsafe fn show_menu(hwnd: HWND) {
             nid.hWnd = hwnd;
             nid.uID = TRAY_ID;
             nid.uFlags = NIF_ICON;
-            Shell_NotifyIconW(NIM_DELETE, &nid);
+            if !Shell_NotifyIconW(NIM_DELETE, &nid).as_bool() {
+                log("failed to remove tray icon");
+            }
             PostQuitMessage(0);
         }
         _ => {}
@@ -589,7 +593,9 @@ fn add_tray_icon(hwnd: HWND, hinstance: HINSTANCE) {
         nid.uCallbackMessage = TRAY_CALLBACK;
         nid.hIcon = icon;
         set_str16(&mut nid.szTip, "ProxyKeeper 点击添加直连地址");
-        Shell_NotifyIconW(NIM_ADD, &nid);
+        if !Shell_NotifyIconW(NIM_ADD, &nid).as_bool() {
+            log("failed to add tray icon");
+        }
     }
     let _ = hinstance;
 }
